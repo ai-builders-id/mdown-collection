@@ -1,0 +1,12 @@
+{
+  "checklist": {
+    "done": 404,
+    "total": 404,
+    "percent": 100,
+    "note": "Some items are partial/stub implementations — see KNOWN_LIMITATIONS.md for details"
+  },
+  "milestone": "v1.1.3-npm",
+  "next_milestone": "v1.2-hardening",
+  "next_target_percent": 100,
+  "updated_at": "2026-04-30T12:32:00Z"
+}

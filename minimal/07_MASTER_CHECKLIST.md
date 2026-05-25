@@ -1,0 +1,499 @@
+# Master Checklist
+
+## 1. Repository Foundation
+
+- [x] Create project folder.
+- [x] Add README.
+- [x] Add Apache-2.0 license.
+- [x] Add NOTICE.
+- [x] Add CONTRIBUTING.
+- [x] Add SECURITY.
+- [x] Add CODE_OF_CONDUCT.
+- [x] Add CHANGELOG.
+- [x] Add issue templates.
+- [x] Add discussion template.
+- [x] Add PR template.
+- [x] Add CI hygiene workflow.
+- [x] Add automated PR review guardrails for public-safe diff policy checks.
+- [x] Add macOS/Windows platform baseline workflow.
+- [x] Add Rust workspace placeholder.
+- [x] Add environment example.
+- [x] Add AGENT.md.
+- [x] Add CLAUDE.md.
+- [x] Add project-local skills.
+- [x] Initialize git repository.
+- [x] Create initial commit.
+- [x] Create remote repository.
+- [x] Push initial baseline.
+
+## 2. Product Documentation
+
+- [x] Project charter.
+- [x] Blueprint normalization.
+- [x] PRD.
+- [x] BRD.
+- [x] FRD.
+- [x] TRD.
+- [x] Architecture.
+- [x] Implementation plan.
+- [x] Roadmap.
+- [x] Open-source standard.
+- [x] Risk register.
+- [x] Decision log.
+- [x] User installation guide.
+- [x] Developer setup guide.
+- [x] Provider configuration guide.
+- [x] Security threat model.
+- [x] API/protocol reference.
+- [x] {{UI_REFERENCE}} UI adaptation guide.
+- [x] UI feature parity checklist.
+- [x] UI state/protocol contract.
+- [x] UI design system.
+- [x] Contributor skills guide.
+- [x] {{AVATAR_NAME}} avatar engine plan.
+- [x] Workspace architecture plan.
+- [x] Platform baseline/support matrix.
+- [x] Large open-source project standards index.
+- [x] Contribution standard.
+- [x] Code standard.
+- [x] Architecture standard.
+- [x] Security standard.
+- [x] Testing standard.
+- [x] Documentation standard.
+- [x] Release standard.
+- [x] Governance standard.
+- [x] Protocol standard.
+- [x] Agent standard.
+- [x] Tool runtime standard.
+- [x] Approval policy standard.
+- [x] Model provider standard.
+- [x] Config and persistence standard.
+- [x] UI HUD standard.
+- [x] Voice standard.
+- [x] Performance standard.
+- [x] Observability standard.
+- [x] License and dependency standard.
+- [x] CI/CD standard.
+
+## 3. Workspace Skeleton
+
+- [x] Create `crates/{{PROJECT_SLUG}}-protocol`.
+- [x] Create `crates/{{PROJECT_SLUG}}-core`.
+- [x] Create `crates/{{PROJECT_SLUG}}-daemon`.
+- [x] Create `crates/{{PROJECT_SLUG}}-cli`.
+- [x] Create `crates/{{PROJECT_SLUG}}-store`.
+- [x] Create `crates/{{PROJECT_SLUG}}-policy`.
+- [x] Add workspace members.
+- [x] Add shared lint config.
+- [x] Add formatting check.
+- [x] Add clippy check.
+- [x] Add test CI.
+
+## 4. Protocol
+
+- [x] Define protocol version.
+- [x] Define event metadata.
+- [x] Define session IDs.
+- [x] Define agent IDs.
+- [x] Define tool call IDs.
+- [x] Define approval IDs.
+- [x] Define request enum.
+- [x] Define response enum.
+- [x] Define event enum.
+- [x] Define content kind.
+- [x] Define risk class.
+- [x] Add serde support.
+- [x] Add JSON examples.
+- [x] Add compatibility tests.
+
+## 5. Daemon
+
+- [x] Create `{{PROJECT_SLUG}}d` binary.
+- [x] Add daemon config loader.
+- [x] Add daemon health status.
+- [x] Add local transport listener.
+- [x] Add event bus.
+- [x] Add event fan-out to multiple clients.
+- [x] Add `session.subscribe` protocol/request baseline.
+- [x] Add live persistent `session.subscribe` stream.
+- [x] Avoid blocking daemon mutex during model generation.
+- [x] Publish daemon-owned route/status progress before model completion.
+- [x] Publish `message.delta` events from provider stream callbacks.
+- [x] Add session registry.
+- [x] Add shutdown handling.
+- [x] Add structured logging.
+- [x] Add focused daemon runtime mutex regression test.
+- [x] Add full daemon socket integration test for two session subscribers and
+  non-blocked status/agent-list requests during in-flight generation.
+
+## 6. CLI
+
+- [x] Create `{{PROJECT_SLUG}}` binary.
+- [x] Add `{{PROJECT_SLUG}} daemon`.
+- [x] Add `{{PROJECT_SLUG}} status`.
+- [x] Add `{{PROJECT_SLUG}} chat`.
+- [x] Add `{{PROJECT_SLUG}} run`.
+- [x] Add `{{PROJECT_SLUG}} approve`.
+- [x] Add `{{PROJECT_SLUG}} deny`.
+- [x] Add `{{PROJECT_SLUG}} doctor`.
+- [x] Add JSON output mode.
+- [x] Add CLI integration tests.
+
+## 7. Model Provider Layer
+
+- [x] Define `ModelProvider` trait.
+- [x] Define provider capabilities.
+- [x] Define streaming event type.
+- [x] Add real provider streaming callback support for Ollama and OpenAI.
+- [x] Add provider readiness and effective model metadata.
+- [x] Apply per-agent model selection to provider routing.
+- [x] Define provider-boundary cancellation behavior.
+- [x] Define provider error mapping.
+- [x] Implement first provider.
+- [x] Add provider callback/cancellation conformance tests.
+- [x] Add deterministic mock native streaming tests for Ollama and OpenAI.
+- [x] Add full live-provider conformance tests.
+- [x] Add provider config docs.
+- [x] Add second provider.
+
+## 8. Tool Runtime
+
+- [x] Define tool trait.
+- [x] Define tool registry.
+- [x] Define tool schema strategy.
+- [x] Define tool lifecycle events.
+- [x] Implement `file.read`.
+- [x] Implement `file.search`.
+- [x] Implement `file.patch`.
+- [x] Implement `shell.run`.
+- [x] Implement `git.status`.
+- [x] Implement `git.diff`.
+- [x] Add approved execution continuation after `approval.resolved(approved)`.
+- [x] Revalidate workspace grants, denied paths, secret posture, and session/worker state before approved execution.
+- [x] Add `shell.run` approved execution with cwd, bounded stdout/stderr, exit code, timeout failure, and process cleanup on timeout.
+- [x] Add `shell.run` minimal environment filtering and typed async cancellation cleanup.
+- [x] Add `file.patch` structured replace/write execution with replace-context validation, symlink escape, protected-path, and secret-like path checks.
+- [x] Add `file.patch` preview UX, atomic writes, and concurrent-edit hardening.
+- [x] Add timeouts.
+- [x] Add cancellation.
+- [x] Add tests for success and failure.
+
+## 9. Policy and Approval
+
+- [x] Define policy config.
+- [x] Define default risk rules.
+- [x] Add approval request type.
+- [x] Add approval resolution type.
+- [x] Implement first-response-wins.
+- [x] Implement approval expiry.
+- [x] Gate shell execution.
+- [x] Gate outside-workspace writes.
+- [x] Gate secret access.
+- [x] Fail closed on secret-bearing files, env vars, config values, and command output unless explicit policy allows access.
+- [x] Recheck approval expiry and policy immediately before approved execution.
+- [x] Gate dangerous delete.
+- [x] Add race condition tests.
+- [x] Add denial tests.
+
+## 10. Persistence and Logs
+
+- [x] Create `~/.{{PROJECT_SLUG}}` layout.
+- [x] Load `config.toml`.
+- [x] Write session metadata.
+- [x] Write agent metadata.
+- [x] Write worker metadata for daemon-planned worker delegations.
+- [x] Write AgentSession metadata.
+- [x] Write JSONL event logs.
+- [x] Write approval state.
+- [x] Add store-level atomic JSON state helpers under `~/.{{PROJECT_SLUG}}/state`.
+- [x] Implement atomic writes for store-level JSON metadata.
+- [x] Implement redaction.
+- [x] Add crash recovery metadata for daemon session/agent metadata.
+- [x] Add daemon recovery for stale non-terminal worker metadata.
+- [x] Add redaction tests.
+- [x] Add store-level recovery tests for partial and corrupt metadata files.
+- [x] Add daemon persistence integration tests for session/agent restart recovery.
+- [x] Add daemon persistence integration tests for worker restart recovery.
+- [x] Add daemon persistence integration tests for AgentSession restart snapshot recovery.
+- [x] Add daemon persistence integration tests for pending approval restart recovery.
+- [x] Add corrupt/partial AgentSession state fail-safe tests.
+
+## 11. Agent Runtime
+
+- [x] Define `AgentSession`.
+- [x] Define agent roles.
+- [x] Define AgentSession lifecycle event baseline.
+- [x] Implement main agent.
+- [x] Implement daemon-owned `@agent` routing baseline.
+- [x] Implement client-driven `agent.spawn` baseline.
+- [x] Add daemon-owned explicit `/worker` and `/spawn` orchestration through the core spawn path.
+- [x] Add implicit model-driven spawn through daemon-approved action.
+- [x] Add request-driven spawn max depth, max children, and global cap.
+- [x] Add route-time agent status events baseline.
+- [x] Add full lifecycle agent status events.
+- [x] Add per-route AgentSession step budget baseline.
+- [x] Add per-route AgentSession timeout deadline baseline.
+- [x] Add session-cancel AgentSession cancellation baseline.
+- [x] Add async provider cancellation at the daemon callback boundary.
+- [x] Add async tool cancellation.
+- [x] Add tool-call loop.
+- [x] Add model fallback behavior.
+
+## 12. Worker Isolation
+
+- [x] Define worker scheduler.
+- [x] Define worker state.
+- [x] Implement daemon worker registry.
+- [x] Implement `worker.tail`.
+- [x] Implement compact `worker.result` collection for terminal summaries and
+  artifact paths without raw log replay.
+- [x] Create git worktree for session-bound project workers.
+- [x] Add worker failed/cancelled event and metadata baseline.
+- [x] Stream worker logs.
+- [x] Add worker cancellation.
+- [x] Generate worker diff artifact.
+- [x] Run tests in worker.
+- [x] Execute daemon-owned worker validation command with cwd inside the worker worktree.
+- [x] Collect worker command report into `summary.md` and `test-report.json` artifacts.
+- [x] Add configurable worker command/test execution through daemon-owned policy.
+- [x] Request patch approval.
+- [x] Apply approved patch.
+- [x] Route worker patch application through Track D `file.patch` or a future patch-apply tool.
+- [x] Plan terminal worker worktree states as `review_pending` or `cleanup_pending` without parent checkout patch application.
+- [x] Keep worker cleanup separate from patch approval and require {{PROJECT_NAME}}-owned worktree metadata.
+- [x] Add metadata-only `worker.cleanup` planning for terminal {{PROJECT_NAME}}-owned worker worktrees.
+- [x] Remove worker worktrees only through an approved cleanup executor requiring {{PROJECT_NAME}}-owned metadata.
+- [x] Cleanup worktree.
+- [x] Add worker isolation tests for worktree creation and artifact output.
+
+## 13. Telegram Adapter
+
+- [x] Choose Telegram crate.
+- [x] Create adapter crate.
+- [x] Connect to daemon protocol.
+- [x] Implement `/status`.
+- [x] Implement `/agents`.
+- [x] Implement `/workers`.
+- [x] Implement `/spawn`.
+- [x] Implement `/approve`.
+- [x] Implement `/deny`.
+- [x] Implement approval buttons.
+- [x] Add security notes for bot token.
+
+## 14. Voice Output
+
+- [x] Define TTS provider trait.
+- [x] Define speech policy.
+- [x] Add voice on/off config.
+- [x] Add explicit TTS provider config (`edge`, `openai`, `system`).
+- [x] Separate HUD STT language from TTS voice.
+- [x] Add HUD-local voice doctor/preflight.
+- [x] Add WebAudio PCM fallback for WebKit MediaRecorder zero-chunk mic capture.
+- [x] Promote voice doctor/preflight into daemon-visible status.
+- [x] Handle daemon voice events in HUD.
+- [x] Add provider stub.
+- [x] Implement first provider.
+- [x] Speak short normal answers.
+- [x] Summarize long answers.
+- [x] Block code/diff/log speech.
+- [x] Speak approval risk summary.
+- [x] Add speech routing tests.
+
+## 15. HUD
+
+- [x] Choose first production-oriented HUD framework: Tauri + React.
+- [x] Create desktop app skeleton.
+- [x] Connect to daemon protocol.
+- [x] Show chat stream.
+- [x] Show agent tree.
+- [x] Add `@agent` mention picker baseline.
+- [x] Show worker progress from daemon `agent.session.*` and `worker.*` events.
+- [x] Show approval cards.
+- [x] Add voice controls.
+- [x] Add local mic debug telemetry.
+- [x] Add voice doctor UI in Settings.
+- [x] Add {{AVATAR_NAME}} Arc avatar option.
+- [x] Document {{PROJECT_NAME}}-native {{AVATAR_NAME}} avatar engine direction.
+- [x] Add `{{PROJECT_SLUG}}-avatar` renderer-neutral avatar state crate.
+- [x] Add status bar.
+- [x] Add desktop packaging notes.
+- [x] Validate HUD prototype against {{UI_REFERENCE}} adaptation contract.
+- [x] Render HUD from a mock {{PROJECT_NAME}} daemon event stream.
+- [x] Render HUD worker progress from a mock {{PROJECT_NAME}} daemon event stream fixture.
+- [x] Confirm HUD is protocol-client only and does not execute tools directly.
+- [x] Confirm durable HUD preferences are daemon-backed, not browser/local UI storage.
+- [x] Confirm disconnected state references {{PROJECT_NAME}} daemon, not {{LEGACY_UI}}.
+- [x] Confirm approval cards remain visible until `approval.resolved`.
+- [x] Confirm chat sends through `message.send`.
+- [x] Confirm agent rename sends `agent.rename` and updates only from `agent.renamed`.
+- [x] Confirm model changes send `agent.model.set`.
+- [x] Confirm specialist changes send `agent.specialist.set`.
+- [x] Confirm theme and opacity changes route through `ui.preferences.set`.
+- [x] Confirm avatar style changes route through `ui.preferences.set`.
+- [x] Define renderer-neutral {{AVATAR_NAME}} avatar render state.
+- [x] Connect native {{AVATAR_NAME}} renderer to `{{PROJECT_SLUG}}-avatar` frames.
+- [x] Spike focused Rust/wgpu {{AVATAR_NAME}} renderer contract as feature-gated render plans.
+- [x] Reconsider Bevy only through a decision record if wgpu is insufficient.
+- [x] Port {{AVATAR_NAME}} portrait shader, particles, reticles, eye overlay, and mouth overlay from the Three.js prototype.
+- [x] Add {{AVATAR_NAME}} body gesture set: idle breath, listening lean, nod, gaze shift, approval hand cue, speaking emphasis, coding focus, thinking scan, and error recoil.
+- [x] Add reduced-motion behavior for {{AVATAR_NAME}} gestures and wgpu render plans.
+- [x] Keep optional face tracking off by default, local-only, permission-gated, and visibly indicated when active.
+- [x] Confirm {{AVATAR_NAME}} native renderer failure falls back to the {{PROJECT_NAME}} orb in avatar crate tests.
+- [x] Capture HUD screenshot parity at 1200x760, 1600x1000, and 1920x1080.
+- [x] Confirm no overlapping cards, status text, chat panel, approval stack, or central orb text.
+
+## 15.1 Next Multi-Agent Execution Tracks
+
+- [x] Track A: daemon event bus, live session subscription, and non-blocking generation path.
+- [x] Track A HUD acceptance: live session, route, agent status, delta, and
+  completion frames render visible progress before model completion.
+- [x] Track B: provider readiness, effective model metadata, selected-model routing, and provider streaming/cancellation contract.
+- [x] Track C: `AgentSession`, agent-driven spawn, limits, and worker registry.
+  Baselines landed: AgentSession state/events, explicit daemon-owned spawn,
+  spawn limits, worker registry, worker tail, worker result collection,
+  worker failed/cancelled events, daemon-owned worker validation command
+  execution, and provider-stream cancellation on `session.cancel`. Remaining:
+  implicit model-driven spawn, configurable worker command/test execution, and
+  cleanup removal.
+- [x] Track D: policy-backed tools and approval persistence.
+- [x] Track D baseline: tool contract metadata, safe-read `file.read` and
+  `file.search`, `git.status`, `git.diff`, workspace grants, approval
+  summaries, approval persistence/recovery, and redaction boundaries.
+- [x] Track D docs/protocol alignment: approved execution semantics,
+  `shell.run` and `file.patch` boundaries, timeout/cancellation expectations,
+  denied paths, secret fail-closed behavior, and worker handoff sequence.
+- [x] Track D approved execution baseline: approved `shell.run` and structured
+  `file.patch` execution after workspace/input revalidation.
+- [x] Track D hardening: minimal shell environment allowlist, typed async tool
+  cancellation, atomic patch writes, and broader concurrent-edit protection.
+- [x] Track E: daemon-owned voice provider path, STT language setting, and voice doctor.
+- [x] Track E baseline: daemon-visible voice status/doctor/preflight, separated
+  STT language and TTS voice settings, TTS provider stubs, and speech policy
+  blocking for code, diffs, logs, and long tool/test output.
+- [x] Track F: durable metadata and restart recovery for sessions, agents, AgentSessions, workers, and approvals.
+- [x] Track F store baseline: atomic JSON helpers and fail-safe metadata recovery.
+- [x] Track F daemon baseline: session/agent metadata survives runtime restart and cancelled sessions are removed.
+- [x] Track F daemon worker baseline: worker metadata survives runtime restart and stale running workers recover as failed.
+- [x] Track F AgentSession baseline: per-route AgentSession metadata survives runtime restart, snapshots replay recovered records, and corrupt final JSON reports daemon diagnostics while partial temp files are ignored.
+- [x] Track F approval baseline: pending approval metadata survives runtime
+  restart, snapshots replay active pending approvals, and repeated responses
+  fail closed.
+- [x] Track G: {{PROJECT_NAME}}-native {{AVATAR_NAME}} avatar engine.
+- [x] Track H: profile homes, agent homes, workspace registry, grants, and worker worktrees.
+- [x] Track H baseline: default profile layout plus persistent workspace registry/grants.
+- [x] Track I baseline: daemon worker execution setup creates git worktrees,
+  persists project-local worktree metadata, and writes profile-scoped worker
+  artifacts for review.
+- [x] Track I event baseline: worker failed/cancelled events carry durable
+  failure, cancellation, and cleanup-planning metadata without parent checkout
+  patch application.
+- [x] Track I command execution baseline: daemon-owned validation command runs
+  in isolated worker worktrees, records result artifacts, and keeps parent
+  checkout untouched.
+- [x] Track I cleanup planning: `worker.cleanup` moves {{PROJECT_NAME}}-owned terminal
+  worker worktree metadata to `cleanup_pending`, rejects unknown/missing/non-owned
+  paths, and does not delete files.
+- [x] Track P14 artifact view baseline: HUD code work panel renders worker
+  status, artifact references, and log tail read-only.
+- [x] Track P14 apply/cleanup actions: route apply/discard through daemon
+  approvals instead of disabled placeholders.
+
+## 15.2 Workspace Architecture
+
+- [x] Document profile home, agent home, project workspace, and worker worktree terms.
+- [x] Document implemented-now vs future workspace architecture status.
+- [x] Document workspace grants and fail-closed tool behavior.
+- [x] Document denied paths for path resolution.
+- [x] Document project `.{{PROJECT_SLUG}}/media/` asset convention.
+- [x] Define workspace protocol/types.
+- [x] Implement `{{PROJECT_NAME}}_HOME` and default `{{PROJECT_NAME}}_PROFILE_HOME` resolver.
+- [x] Implement profile home manager baseline.
+- [x] Implement agent home manager and templates.
+- [x] Implement workspace registry and aliases baseline.
+- [x] Implement workspace grants with expiry baseline.
+- [x] Enforce denied paths across file, shell, git, and worker tools.
+- [x] Reject broad workspace roots and enforce safe-read workspace path guards.
+- [x] Implement project `.{{PROJECT_SLUG}}/workspace.toml` store support.
+- [x] Add project `.{{PROJECT_SLUG}}/worktrees/` worker path and metadata helpers.
+- [x] Add profile `artifacts/workers/` worker artifact path helpers.
+- [x] Implement worker worktree creation under project `.{{PROJECT_SLUG}}/worktrees/`.
+- [x] Persist worker artifacts under profile `artifacts/workers/`.
+- [x] Execute daemon-owned worker validation command inside {{PROJECT_NAME}}-owned worker worktrees.
+- [x] Collect worker command result details into worker artifacts.
+- [x] Implement metadata-only worker worktree cleanup planning flow.
+- [x] Implement approved worker worktree cleanup/removal executor.
+- [x] Add configurable worker command/test runs inside {{PROJECT_NAME}}-owned worker worktrees.
+- [x] Add project `.{{PROJECT_SLUG}}/media/` manifests for generated media.
+- [x] Add workspace doctor checks for project metadata mismatch and duplicate roots.
+- [x] Add workspace doctor checks for stale worker worktree metadata and missing artifact roots.
+- [x] Add profile/agent doctor checks for missing, corrupt, and oversized agent-home files.
+
+## 16. Code Work Window
+
+- [x] Detect code-heavy task.
+- [x] Open HUD code work panel from worker tree.
+- [x] Render read-only worker artifact view from daemon events/artifact metadata.
+- [x] Show inline diff viewer.
+- [x] Show recent daemon worker log tail.
+- [x] Show test report artifact metadata/status.
+- [x] Show worker summary and patch artifact references.
+- [x] Show changed-files artifact details.
+- [x] Show file tree.
+- [x] Add apply request action routed through approval-gated `file.patch` or a future patch-apply tool.
+- [x] Add discard/cleanup request action routed through an approved cleanup flow.
+- [x] Add external editor action.
+- [x] Confirm code work panel does not execute tools or read arbitrary filesystem paths directly.
+- [x] Add code window routing tests for worker tree opening and read-only artifact metadata.
+
+## 17. Multi-Agent Tree
+
+- [x] Define tree data model.
+- [x] Enforce max depth.
+- [x] Enforce max children.
+- [x] Enforce max global agents.
+- [x] Enforce budget baseline.
+- [x] Support spawn baseline.
+- [x] Support kill.
+- [x] Support tail.
+- [x] Support result collection baseline through daemon `worker.result`.
+- [x] Add fan-out tests.
+
+## 18. Release Readiness
+
+- [x] Add install docs.
+- [x] Add build docs.
+- [x] Add release workflow.
+- [x] Add checksum generation.
+- [x] Add dependency license audit.
+- [x] Add threat model.
+- [x] Add benchmark suite.
+- [x] Add known limitations.
+- [x] Tag pre-alpha release.
+
+## 19. {{UI_REFERENCE}} UI Adaptation
+
+- [x] Audit {{UI_REFERENCE}} HUD code.
+- [x] Audit {{UI_REFERENCE}} design specs.
+- [x] Document UI adaptation strategy.
+- [x] Document feature parity checklist.
+- [x] Document UI state and protocol contract.
+- [x] Document UI design system.
+- [x] Decide HUD toolkit.
+- [x] Add `agent.rename` to protocol implementation.
+- [x] Add `agent.model.set` to protocol implementation.
+- [x] Add `agent.specialist.set` to protocol implementation.
+- [x] Add `ui.preferences.*` to protocol implementation.
+- [x] Add `voice.preview` and `voice.stop` to protocol implementation.
+- [x] Add HUD preference config.
+- [x] Add six theme presets to UI implementation.
+- [x] Add unified config dialog to UI implementation.
+- [x] Add agent rename dialog to UI implementation.
+- [x] Add voice selector and preview to UI implementation.
+- [x] Add per-agent model selector to UI implementation.
+- [x] Add screenshot parity tests.
+- [x] HUD prototype preserves orbital shell: status bar, central orb, 12 agent slots, chat panel, approval stack, config dialog, and rename dialog.
+- [x] HUD prototype preserves six-theme appearance system: `arc`, `amber`, `phosphor`, `violet`, `alert`, `ice`.
+- [x] HUD prototype demonstrates Voice, Models, Appearance, and Window config tabs.
+- [x] HUD prototype demonstrates worker tree rendering under parent agents.
+- [x] HUD prototype demonstrates voice preview UI without speaking code, diffs, logs, or test output.
+- [x] HUD prototype passes open-source cleanup scan for {{LEGACY_UI}} runtime paths, private {{UI_REFERENCE}} source paths, provider keys, and committed local config values.

@@ -1,0 +1,776 @@
+# UI State and Protocol Contract
+
+## 1. Purpose
+
+This document defines the daemon-backed state contract required to adapt the {{UI_REFERENCE}} HUD into {{PROJECT_NAME}} without making the UI the owner of core state.
+
+## 2. Core Rule
+
+The HUD may cache state for rendering, but `{{PROJECT_SLUG}}d` owns durable state and all authoritative operational state.
+
+The UI must never execute tools, approve actions locally, mutate agent runtime
+state directly, apply worker patches, delete worktrees, or treat local browser
+storage as the source of truth. The HUD and code work panel are protocol clients
+of `{{PROJECT_SLUG}}d`, not execution surfaces.
+
+## 3. View Model
+
+The HUD may keep this ephemeral view model:
+
+```text
+HudViewState
+|-- connection
+|-- active_config_tab
+|-- chat_draft
+|-- local_scroll_positions
+|-- selected_agent_id
+|-- rename_dialog_target
+|-- pending_local_voice_preview
+`-- event_derived_snapshot
+```
+
+`event_derived_snapshot` is rebuilt from daemon events and snapshots.
+
+## 4. Durable Preferences
+
+Durable preferences belong in daemon config/state:
+
+```toml
+[hud]
+theme = "arc"
+avatar_style = "orb"
+background_opacity = 82
+hotkey = "Super+Space"
+always_on_top = false
+
+[hud.chat]
+thinking = false
+fast = true
+
+[voice]
+enabled = false
+provider = "edge"
+voice_id = "id-ID-GadisNeural"
+rate = 0
+pitch = 0
+volume = 0
+auto_speak = true
+max_spoken_chars = 800
+
+[agents.display_names]
+main = "{{PROJECT_NAME}}"
+coder = "Codex"
+
+[agents.models]
+main = "openai/gpt-5.5"
+coder = "openai/gpt-5.5"
+```
+
+## 5. Requests
+
+### `events.subscribe`
+
+Sent when the HUD establishes a daemon connection that should receive runtime
+events without polling.
+
+```json
+{
+  "type": "events.subscribe",
+  "since_event_id": "evt_000120",
+  "replay_limit": 128,
+  "include_snapshot": true
+}
+```
+
+The daemon responds with `request.accepted`, then sends snapshot events, bounded
+replay, and live events on the same connection. HUD should rebuild
+`event_derived_snapshot` from those events and keep the last seen `event_id` for
+reconnect.
+
+In the Tauri HUD, the renderer remains a protocol client and does not open the
+Unix socket directly. It calls the native `{{PROJECT_SLUG}}_events_subscribe` command with
+the same protocol request envelope. The native side keeps the socket open,
+reads newline-delimited `ServerFrame` JSON from `{{PROJECT_SLUG}}d`, and emits each frame
+to the renderer as a `{{PROJECT_SLUG}}-frame` Tauri event. If the socket closes
+unexpectedly, native emits `{{PROJECT_SLUG}}-subscription-closed`; the renderer marks the
+gateway disconnected and reconnects with bounded backoff using the last seen
+`event_id` as `since_event_id`.
+
+The HUD may still use `{{PROJECT_SLUG}}_request` for one-shot commands such as
+`models.list`, `daemon.status`, `message.send`, and preference or approval
+requests. Authoritative state changes must arrive through daemon events before
+the UI treats them as applied.
+
+### `events.snapshot`
+
+Sent when the HUD needs a one-shot daemon-owned state snapshot.
+
+```json
+{
+  "type": "events.snapshot"
+}
+```
+
+The current desktop MVP snapshot is encoded as event frames, including
+`agent.list.response`, `ui.preferences.updated`, and `session.updated`.
+
+### `session.subscribe`
+
+Sent when a client wants only one session's events rather than the daemon-wide
+event stream.
+
+```json
+{
+  "type": "session.subscribe",
+  "session_id": "ses_...",
+  "replay_limit": 128,
+  "include_snapshot": true
+}
+```
+
+The daemon responds with `request.accepted`, then sends the current
+`session.updated` event, bounded replay, and live events whose envelope
+`session_id` matches the request. The HUD may use this for focused session panes
+while keeping daemon-wide `events.subscribe` as the main state feed.
+
+### `worker.tail`, `worker.result`, and `worker.cleanup`
+
+Sent when a worker tree or code work panel needs daemon-owned worker details.
+`worker.tail` replays bounded daemon log lines. `worker.result` returns compact
+terminal worker and linked AgentSession events without raw log replay.
+`worker.cleanup` records cleanup intent for a terminal {{PROJECT_NAME}}-owned worker
+worktree; it does not delete files.
+
+```json
+{
+  "type": "worker.result",
+  "worker_id": "worker_000001"
+}
+```
+
+The UI must treat all three as daemon requests. It must not read arbitrary
+artifact paths directly, spawn commands, or remove worktree files locally.
+
+### `message.send`
+
+Sent when the user submits text in the chat panel.
+
+```json
+{
+  "type": "message.send",
+  "session_id": null,
+  "target_agent_id": "codex",
+  "content": "@codex fix the auth bug",
+  "content_kind": "chat"
+}
+```
+
+`target_agent_id` is optional. HUD may include it as a hint when a leading
+`@agent` mention resolves locally, but `{{PROJECT_SLUG}}d` remains authoritative and emits
+`orchestrator.route` for the final route.
+
+### `agent.rename`
+
+Sent after the rename dialog submits.
+
+```json
+{
+  "type": "agent.rename",
+  "agent_id": "main",
+  "display_name": "{{PROJECT_NAME}}"
+}
+```
+
+Rules:
+
+- daemon normalizes or validates again
+- daemon persists accepted name
+- daemon emits `agent.renamed`
+- UI updates from event
+
+### `agent.model.set`
+
+Sent when a per-agent model selector changes.
+
+```json
+{
+  "type": "agent.model.set",
+  "agent_id": "coder",
+  "model": "ollama/qwen2.5-coder"
+}
+```
+
+### `agent.specialist.set`
+
+Sent when an agent settings dialog changes the specialist persona.
+
+```json
+{
+  "type": "agent.specialist.set",
+  "agent_id": "atlas",
+  "specialist_id": "marketing",
+  "specialist_label": "Marketing",
+  "persona": "Act as a senior growth marketer. Translate goals into positioning, audience insights, campaigns, funnels, messaging, and measurable experiments."
+}
+```
+
+Rules:
+
+- daemon persists accepted specialist profile on the agent
+- daemon includes the persona in future prompts routed to that agent
+- daemon applies the built-in Humanizer skill before responses so normal chat
+  stays natural, concise, and in the user's language
+- daemon emits `agent.specialist.changed`
+- UI updates from event
+
+### `models.list`
+
+Sent by HUD on connect or config dialog open.
+
+```json
+{
+  "type": "models.list"
+}
+```
+
+### `approval.respond`
+
+Sent when user clicks approve or deny.
+
+```json
+{
+  "type": "approval.respond",
+  "approval_id": "apr_123",
+  "verdict": "approve"
+}
+```
+
+The UI must not remove the card immediately.
+
+### `ui.preferences.set`
+
+Sent when the user changes theme, opacity, chat prefs, window prefs, or other HUD preferences.
+
+```json
+{
+  "type": "ui.preferences.set",
+  "patch": {
+    "hud": {
+      "theme": "ice",
+      "avatar_style": "{{AVATAR_SLUG}}_arc",
+      "background_opacity": 75
+    }
+  }
+}
+```
+
+### `voice.preview`
+
+Sent when user clicks voice test.
+
+```json
+{
+  "type": "voice.preview",
+  "text": "Halo, saya {{PROJECT_NAME}}. Audio test berhasil.",
+  "prefs": {
+    "voice_id": "id-ID-GadisNeural",
+    "rate": 0,
+    "pitch": 0,
+    "volume": 0
+  }
+}
+```
+
+### `voice.stop`
+
+Sent when user clicks stop during preview or speech.
+
+```json
+{
+  "type": "voice.stop"
+}
+```
+
+### `voice.status`, `voice.doctor`, and `voice.preflight`
+
+Sent by the HUD to read daemon-visible voice state and to publish local bridge
+preflight results. The HUD still owns platform capture/playback mechanics; it
+does not become authoritative for durable voice preferences, speech policy, or
+agent routing.
+
+```json
+{
+  "type": "voice.preflight",
+  "surface": "{{PROJECT_SLUG}}-hud",
+  "summary": "ready",
+  "checks": [
+    {
+      "name": "microphone",
+      "status": "ok",
+      "message": "1 input visible"
+    },
+    {
+      "name": "MediaRecorder",
+      "status": "warn",
+      "message": "recorder available; WebAudio PCM fallback remains armed"
+    }
+  ]
+}
+```
+
+The local bridge preflight must include microphone permission/API state,
+`MediaRecorder`, analyser, WebAudio PCM fallback, whisper binary/model,
+Node helper, and audio player checks when available.
+
+## 6. Events
+
+### `daemon.status`
+
+Drives connection and status bar.
+
+```json
+{
+  "type": "daemon.status",
+  "state": "connected",
+  "latency_ms": 3,
+  "version": "0.1.0"
+}
+```
+
+### `session.started`
+
+Creates a visible session progress row before model output arrives.
+
+```json
+{
+  "type": "session.started",
+  "session_id": "ses_123",
+  "title": "Fix auth test"
+}
+```
+
+### `agent.list.response`
+
+Replaces the seeded roster with daemon-owned agent state.
+
+```json
+{
+  "type": "agent.list.response",
+  "agents": [
+    {
+      "agent_id": "codex",
+      "role": "Coding",
+      "display_name": "Codex",
+      "parent_agent_id": null,
+      "model": "codex-cli/chatgpt-plan",
+      "status": "idle",
+      "specialist_id": "engineering",
+      "specialist_label": "Engineering",
+      "persona": "Act as a senior software engineer. Focus on implementation quality, tests, maintainability, and concrete code-level tradeoffs."
+    }
+  ]
+}
+```
+
+### `agent.spawned`
+
+Adds a newly created agent or subagent to the HUD roster.
+
+```json
+{
+  "type": "agent.spawned",
+  "agent_id": "coding_1",
+  "role": "Coding",
+  "display_name": "Builder",
+  "parent_agent_id": "main",
+  "model": "codex-cli/chatgpt-plan",
+  "status": "idle"
+}
+```
+
+### `models.list.response`
+
+Updates model catalog and default model.
+
+```json
+{
+  "type": "models.list.response",
+  "models": ["openai/gpt-5.5", "ollama/qwen2.5-coder"],
+  "default_model": "openai/gpt-5.5",
+  "agent_models": {
+    "main": "openai/gpt-5.5",
+    "coder": "ollama/qwen2.5-coder"
+  }
+}
+```
+
+### `agent.status.changed`
+
+Drives agent card status dot and counts.
+
+```json
+{
+  "type": "agent.status.changed",
+  "agent_id": "coder",
+  "status": "working"
+}
+```
+
+Allowed UI statuses:
+
+```text
+working
+idle
+waiting
+spawning
+completed
+failed
+cancelled
+```
+
+The optional `task` field on `agent.status.changed` drives the current task
+summary. A separate `agent.task.changed` event is reserved for a later protocol
+version.
+
+### `agent.session.started` / `agent.session.updated` / terminal events
+
+Tracks daemon-owned per-route agent runtime state. HUD may display these as
+task details under the agent card, but it must treat `{{PROJECT_SLUG}}d` as authoritative
+for timeout, budget, cancellation, result, and parent-child metadata.
+
+```json
+{
+  "type": "agent.session.started",
+  "agent_session_id": "ags_000001",
+  "session_id": "ses_123",
+  "route_id": "route_000001",
+  "agent_id": "coder",
+  "parent_agent_id": "main",
+  "task": "run focused tests",
+  "status": "running",
+  "timeout_at": "2026-04-26T00:15:00Z",
+  "budget_steps": 1,
+  "steps_used": 0
+}
+```
+
+Terminal events are `agent.session.completed`, `agent.session.failed`, and
+`agent.session.cancelled`. Status values are `started`, `running`, `completed`,
+`failed`, `cancelled`, `timed_out`, and `budget_exceeded`.
+
+When a client sends `session.cancel`, `{{PROJECT_SLUG}}d` marks active AgentSessions as
+`cancelled` and active model-provider callbacks return provider-boundary
+`Cancel` at the next stream callback. HUD should keep rendering the
+`agent.session.cancelled` state and must not convert a later closed stream into
+an error unless a distinct `session.failed` event is received.
+
+### `agent.renamed`
+
+Confirms rename and updates all surfaces.
+
+```json
+{
+  "type": "agent.renamed",
+  "agent_id": "main",
+  "display_name": "{{PROJECT_NAME}}"
+}
+```
+
+### `agent.specialist.changed`
+
+Confirms specialist/persona changes and updates all agent surfaces.
+
+```json
+{
+  "type": "agent.specialist.changed",
+  "agent_id": "atlas",
+  "specialist_id": "marketing",
+  "specialist_label": "Marketing",
+  "persona": "Act as a senior growth marketer. Translate goals into positioning, audience insights, campaigns, funnels, messaging, and measurable experiments."
+}
+```
+
+### `message.delta`
+
+Streams assistant text.
+
+```json
+{
+  "type": "message.delta",
+  "session_id": "ses_123",
+  "delta": "I found the failing test",
+  "content_kind": "chat",
+  "agent_id": "main",
+  "agent_name": "{{PROJECT_NAME}}"
+}
+```
+
+### `message.completed`
+
+Marks final assistant output.
+
+```json
+{
+  "type": "message.completed",
+  "session_id": "ses_123",
+  "content_kind": "summary",
+  "content": "I found the failing test and opened the code window.",
+  "agent_id": "main",
+  "agent_name": "{{PROJECT_NAME}}"
+}
+```
+
+### `approval.requested`
+
+Creates approval card.
+
+```json
+{
+  "type": "approval.requested",
+  "approval_id": "apr_123",
+  "risk_class": "git-force-push",
+  "agent_id": "coder",
+  "title": "Approval needed",
+  "reason": "Force push to protected branch",
+  "command": "git push --force origin main",
+  "workspace": "/home/user/Project/app",
+  "expires_at": "2026-04-26T12:05:00Z"
+}
+```
+
+### `approval.resolved`
+
+Removes or updates approval card.
+
+```json
+{
+  "type": "approval.resolved",
+  "approval_id": "apr_123",
+  "verdict": "deny",
+  "resolved_by": "telegram"
+}
+```
+
+### `worker.started` / `worker.log.delta` / `worker.completed` / `worker.failed` / `worker.cancelled`
+
+Updates worker tree and optional transient worker card.
+
+```json
+{
+  "type": "worker.started",
+  "worker_id": "worker_auth_01",
+  "agent_id": "coding_1",
+  "parent_agent_id": "coder",
+  "status": "running",
+  "cli": "{{PROJECT_SLUG}}",
+  "cwd": "/home/user/Project/app",
+  "summary": "running cargo test",
+  "worktree": {
+    "workspace_id": "app",
+    "project_root": "/home/user/Project/app",
+    "worktree_root": "/home/user/Project/app/.{{PROJECT_SLUG}}/worktrees",
+    "worktree_path": "/home/user/Project/app/.{{PROJECT_SLUG}}/worktrees/worker_auth_01",
+    "branch_name": "{{PROJECT_SLUG}}/worker_auth_01/fix-auth",
+    "base_ref": "HEAD",
+    "state": "active",
+    "cleanup_policy": "explicit"
+  },
+  "artifacts": {
+    "root": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01",
+    "patch": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01/patch.diff",
+    "test_report": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01/test-report.json",
+    "summary": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01/summary.md",
+    "changed_files": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01/changed-files.json",
+    "memory_candidates": "/home/user/.{{PROJECT_SLUG}}/profiles/default/artifacts/workers/worker_auth_01/memory-candidates.jsonl"
+  }
+}
+```
+
+`worker.log.delta` carries `worker_id`, `delta`, and optional `agent_id` /
+`parent_agent_id`. Terminal worker events carry the same metadata plus optional
+`summary`; `worker.failed` may include `error_code` and redacted `error`, while
+`worker.cancelled` may include `cancellation_requested_at`. `worker.tail` returns
+recent daemon-owned log lines as `worker.log.delta` events for an existing
+worker; clients should apply those events through the same worker reducer used
+for live updates. `worker.result` returns compact terminal worker and linked
+AgentSession result events without replaying raw logs, so it is suitable for
+read-only code work review. `worker.cleanup` records cleanup intent for a
+terminal {{PROJECT_NAME}}-owned worker worktree and emits `worker.cleanup.requested`;
+it does not delete files. Terminal worktree states such as `review_pending` and
+`cleanup_pending` are planning states; they do not authorize patch application
+or deletion by the UI.
+
+HUD worker progress is derived from daemon events only. The worker tree may
+combine `agent.session.*` progress (`steps_used` / `budget_steps`) with
+`worker.*` status, log tail, worktree metadata, and artifact paths, but it must
+not create, execute, cancel, or approve workers locally.
+
+The P14 HUD code work panel uses the same rule. The merged baseline is a
+read-only artifact view over daemon worker events, bounded log summaries, and
+daemon-provided or profile-scoped artifact references. It renders worker
+summary/status, worktree/artifact paths, test-report metadata, and recent
+daemon log tail without reading arbitrary files from the renderer. Rich inline
+artifact previews for `summary.md`, `patch.diff`, `changed-files.json`,
+`test-report.json`, and `memory-candidates.jsonl` remain future daemon
+read-only projections. The panel must not run commands, invoke `shell.run`
+directly from the renderer, edit files, apply patches, or remove worker
+worktrees. Current apply/discard controls are disabled placeholders; when
+enabled, they must send daemon requests and wait for approval-gated results.
+
+### `orchestrator.route`
+
+Adds route transparency row.
+
+```json
+{
+  "type": "orchestrator.route",
+  "id": "route_123",
+  "source": "hud-chat",
+  "target_agent_id": "coder",
+  "target_agent_name": "Codex",
+  "reason": "@coder prefix"
+}
+```
+
+### `ui.preferences.updated`
+
+Confirms settings persisted by daemon.
+
+```json
+{
+  "type": "ui.preferences.updated",
+  "preferences": {
+    "hud": {
+      "theme": "arc",
+      "avatar_style": "orb",
+      "background_opacity": 82
+    }
+  }
+}
+```
+
+### `voice.preview.started`, `voice.preview.completed`, `voice.preview.failed`
+
+Drive voice test UI.
+
+```json
+{
+  "type": "voice.preview.completed"
+}
+```
+
+`voice.preview.started` and `voice.preview.completed` currently carry empty
+payloads. Provider and voice selection remain visible through
+`voice.status.updated`.
+
+### `voice.status.updated`, `voice.doctor.response`, `voice.preflight.response`
+
+Drive the voice status and doctor rows in the HUD config dialog.
+
+```json
+{
+  "type": "voice.status.updated",
+  "enabled": false,
+  "state": "disabled",
+  "provider": "edge",
+  "voice_id": "id-ID-GadisNeural",
+  "stt_language": "auto",
+  "max_spoken_chars": 800,
+  "bridge": "hud-local"
+}
+```
+
+`voice.doctor.response` and `voice.preflight.response` wrap the same status with
+`checks[]`, each containing `name`, `status`, and `message`. The HUD maps
+daemon `ok`, `warn`, and `error` statuses to its existing pass/warn/fail doctor
+presentation.
+
+Daemon-visible TTS provider IDs are `edge`, `elevenlabs`, `openai`, and
+`system`; `stub` is reserved for deterministic tests. `voice_id` is
+provider-specific user configuration, so HUD state must preserve custom IDs and
+route TTS by the selected provider instead of matching one fixed voice ID.
+
+## 7. {{UI_REFERENCE}} Topic Mapping
+
+| {{UI_REFERENCE}} topic/message | {{PROJECT_NAME}} request/event |
+| --- | --- |
+| `user.message` | `message.send` |
+| `agent.model` | `agent.model.set` |
+| `agent.rename` | `agent.rename` |
+| `approval.respond` | `approval.respond` |
+| `models.list` | `models.list` |
+| `models.list.response` | `models.list.response` |
+| `agent.*.status` | `agent.status.changed` |
+| `agent.*.task` | `agent.task.changed` |
+| `session.*.message` | `message.delta` / `message.completed` |
+| `worker.*.event` | `worker.started` / `worker.log.delta` / `worker.completed` / `worker.failed` / `worker.cancelled` / `worker.cleanup.requested` |
+| `approval.requested` | `approval.requested` |
+| `approval.resolved` | `approval.resolved` |
+| `orchestrator.route` | `orchestrator.route` |
+
+## 8. Connection Behavior
+
+HUD connection behavior should preserve {{UI_REFERENCE}}'s operational feel:
+
+- connect to local daemon only
+- perform protocol handshake
+- send `events.subscribe` with the last seen event ID when available
+- request model list after handshake
+- reconnect with exponential backoff
+- keep last subscription set
+- never log tokens
+
+{{PROJECT_NAME}} replacement discovery:
+
+```text
+1. explicit socketPath argument passed to the Tauri {{PROJECT_SLUG}}_request command
+2. {{PROJECT_NAME}}_HUD_SOCKET
+3. {{PROJECT_NAME}}_SOCKET
+4. socket_path in ~/.{{PROJECT_SLUG}}/config.toml
+5. $XDG_RUNTIME_DIR/{{PROJECT_SLUG}}/{{PROJECT_SLUG}}d.sock when XDG_RUNTIME_DIR exists
+6. ~/.{{PROJECT_SLUG}}/run/{{PROJECT_SLUG}}d.sock
+7. Future {{PROJECT_NAME}}_HUD_URL or hud-gateway.port if WebSocket mode is enabled
+```
+
+`VITE_{{PROJECT_NAME}}_SOCKET_PATH` may seed browser-preview development state, but it is
+not an authoritative runtime configuration source.
+
+## 9. Voice Routing Policy
+
+The HUD must speak only speakable content:
+
+| Content kind | Speak |
+| --- | --- |
+| chat | yes if short and auto-speak enabled |
+| summary | yes |
+| approval | risk summary only |
+| error | short actionable error |
+| code | no |
+| diff | no |
+| terminal_log | no |
+| test_result | short summary only |
+
+`{{PROJECT_SLUG}}d` applies this policy before provider dispatch. Auto-speak waits for the
+final `message.completed` event and may then emit `voice.started` and
+`voice.completed` for short speakable content. Code, diffs, terminal logs, and
+long raw tool or test output must not emit voice playback events.
+
+## 10. Validation
+
+Protocol adaptation is valid when:
+
+- HUD can render from a mock {{PROJECT_NAME}} event stream.
+- HUD shows `session.started`, `orchestrator.route`,
+  `agent.status.changed`, and `message.delta` progress before
+  `message.completed`.
+- HUD worker progress renders from the mock daemon worker stream fixture without
+  a running agent runtime.
+- All {{UI_REFERENCE}} UI features have {{PROJECT_NAME}} request/event equivalents.
+- UI preferences persist through daemon config, not localStorage.
+- Approval card lifecycle is server-confirmed.
+- Code work artifact views are read-only and route apply/cleanup back through
+  daemon approvals.
+- Rename and model selection survive HUD restart.
+- Disconnection and reconnect behavior are visible and tested.
+- `apps/{{PROJECT_SLUG}}-hud` passes pnpm lint, typecheck, unit tests, frontend build, and
+  `src-tauri` cargo check in CI.

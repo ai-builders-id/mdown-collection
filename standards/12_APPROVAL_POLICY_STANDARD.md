@@ -1,0 +1,228 @@
+# {{PROJECT_NAME}} Approval Policy Standard
+
+## 1. Purpose
+
+This standard defines the central approval and policy requirements for {{PROJECT_NAME}}. Policy is a daemon-owned safety boundary. No client, adapter, UI, model provider, agent, or tool may bypass it.
+
+## 2. Core Rules
+
+- `{{PROJECT_SLUG}}d` owns policy decisions.
+- Policy must run before risky tool execution.
+- Safe reads may be auto-allowed by default.
+- Secret access requires approval.
+- Outside-workspace writes require approval.
+- Dangerous deletes require approval.
+- Sudo and system changes require approval.
+- Protected git writes require approval.
+- Approval resolution is first-response-wins.
+- Approval requests and resolutions must be persisted when persistence is enabled.
+
+## 3. Policy Decision Flow
+
+Every action that may cross a safety boundary must follow this flow:
+
+```text
+validate request
+classify risk
+evaluate policy
+auto-allow, auto-deny, or request approval
+persist approval request when needed
+wait for resolution
+revalidate policy, workspace, denied paths, and secret posture if approved
+execute only after approved
+persist resolution and execution result
+```
+
+Policy must fail closed. Unknown or malformed risky actions must not execute.
+
+## 4. Decision Types
+
+Allowed policy decisions:
+
+| Decision | Meaning |
+| --- | --- |
+| allow | Execute without interactive approval |
+| deny | Reject without execution |
+| require_approval | Pause and request approval |
+
+A decision must include:
+
+- action identity
+- risk class
+- reason
+- matching rule, when applicable
+- required approval metadata, when applicable
+
+## 5. Approval Request Contract
+
+Approval requests must include:
+
+- `approval_id`
+- `session_id`
+- `agent_id`, when applicable
+- action or command
+- cwd or workspace
+- risk class
+- concise reason
+- risk summary
+- expiry timestamp, when applicable
+- available responses
+
+The request must contain enough information for CLI, HUD, Telegram, and logs to show the same decision context.
+
+## 6. Approval Resolution
+
+Resolution rules:
+
+- First valid response wins.
+- Later responses must be rejected or reported as already resolved.
+- Denied approvals must prevent execution.
+- Expired approvals must prevent execution.
+- Approved responses must still pass final daemon-side revalidation before
+  execution.
+- Approval state must not depend on UI-local state.
+- Clients must remove approval cards only after `approval.resolved`.
+
+Resolution events must include:
+
+- `approval_id`
+- verdict
+- resolver surface, when known
+- resolved timestamp
+- final state
+
+## 7. Defaults
+
+Recommended default behavior:
+
+| Action | Default |
+| --- | --- |
+| File read inside workspace | allow |
+| File search inside workspace | allow |
+| Git status or diff | allow |
+| Patch inside workspace | require policy decision; approval may be configurable |
+| Shell command | require policy decision |
+| Outside-workspace write | require approval |
+| Secret access | require approval |
+| Dangerous delete | require approval |
+| Sudo or system mutation | require approval |
+| Protected git push or force push | require approval |
+
+Open-source defaults should be conservative and understandable.
+
+Current implementation baseline:
+
+- `file.read`, `file.search`, `git.status`, and `git.diff` are auto-allowed
+  only after daemon-side tool classification and workspace path validation.
+- `shell.run`, write tools, and mutating git/worktree placeholders require
+  approval and are persisted under daemon-owned state.
+- Unknown tools are denied.
+- The policy crate exposes structured classification helpers for workspace
+  mutation, shell execution risk hints, secret access, and dangerous delete.
+  These helpers do not implement execution; unclassified workspace mutations
+  remain denied by default.
+- Approved risky placeholders still fail closed with `tool.failed` until the
+  corresponding execution backend is implemented.
+- `approval.respond` uses daemon state and persisted approval records; the first
+  valid pending response wins, later responses are rejected as already resolved.
+
+Approved execution target:
+
+- Approval records the user's decision; it does not let CLI, HUD, Telegram,
+  voice, or any worker run a local action directly.
+- `{{PROJECT_SLUG}}d` must revalidate approval expiry, tool contract, normalized input,
+  workspace grant, denied paths, secret-access policy, and session/worker state
+  immediately before emitting `tool.started`.
+- If revalidation fails, the daemon emits `tool.failed` and does not execute.
+- `shell.run` requires an `exec` or `admin` workspace grant and a filtered
+  environment with secrets excluded by default.
+- `file.patch` requires write access, a previewable patch, context validation,
+  atomic write behavior where practical, and fail-closed handling for denied
+  paths, symlinks, and concurrent edits.
+- Worker patch application is a separate approval-gated tool call; worker
+  completion does not authorize mutation of the parent workspace.
+
+## 8. Configuration
+
+Policy configuration belongs in `~/.{{PROJECT_SLUG}}/config.toml`.
+
+Configuration may define:
+
+- approval timeout
+- allowed safe-read roots
+- shell command allowlist or denylist
+- protected branch patterns
+- tool-specific approval requirements
+- adapter permissions
+- default deny rules
+
+Environment overrides may be supported for development, but must not weaken policy silently in production-like use.
+
+## 9. Multi-Surface Approvals
+
+Approvals may be shown in multiple surfaces:
+
+- CLI
+- HUD
+- Telegram adapter
+- future desktop notifications
+
+All surfaces must send resolution to the daemon. The daemon must arbitrate first-response-wins and emit one authoritative resolution event.
+
+Clients must handle the case where another surface resolves the approval first.
+
+## 10. Audit and Persistence
+
+When persistence is enabled, {{PROJECT_NAME}} must persist:
+
+- approval request
+- policy decision
+- resolver surface
+- resolution verdict
+- timestamps
+- linked session, agent, and tool call IDs
+
+Persisted data must be redacted. Raw provider keys, auth headers, and environment secrets must never be written to approval logs.
+
+The baseline persists one JSON approval record per approval under
+`~/.{{PROJECT_SLUG}}/state/approvals`. Records include request metadata, risk class,
+expiration, decision, redacted reason, and resolution timestamp.
+
+Secret access is fail-closed by default. A request that targets secret-looking
+paths, secret-bearing environment variables, credential config, auth headers, or
+unredacted command output must be denied unless a future explicit
+`secret-access` policy and approval metadata authorizes that exact access.
+
+## 11. UX Requirements
+
+Approval prompts must be concise but complete.
+
+They should show:
+
+- action
+- workspace or cwd
+- risk class
+- reason
+- affected target
+- expiry
+- approve and deny choices
+
+The HUD approval card must remain visible until `approval.resolved` arrives from the daemon.
+
+## 12. Testing Requirements
+
+Required tests:
+
+- safe read auto-allow
+- outside-workspace write requires approval
+- secret access requires approval
+- dangerous delete requires approval
+- sudo/system change requires approval
+- protected git write requires approval
+- approval allow executes action after backend support and final revalidation
+- approval deny prevents action
+- expiry prevents action
+- duplicate responses are first-response-wins
+- concurrent CLI and HUD responses resolve once
+- request and resolution persistence
+- redaction in approval logs
