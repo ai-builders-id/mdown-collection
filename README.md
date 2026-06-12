@@ -1,109 +1,176 @@
-# {{PROJECT_NAME}} — Prompt Collection
+<img src="https://img.shields.io/badge/status-active-success?style=for-the-badge" alt="Status: Active"/>
+<img src="https://img.shields.io/badge/domains-25-blue?style=for-the-badge" alt="25 Domains"/>
+<img src="https://img.shields.io/badge/templates-100%2B-orange?style=for-the-badge" alt="100+ Templates"/>
+<img src="https://img.shields.io/badge/language-Indonesia-brightgreen?style=for-the-badge" alt="Bahasa Indonesia"/>
 
-Koleksi prompt dokumentasi PRD, BRD, FRD, dan TRD untuk berbagai domain aplikasi bisnis.
-Setiap folder berisi template lengkap dengan `{{VARIABLES}}` yang bisa kamu kustomisasi.
+<br/>
 
----
+# 📋 Koleksi Template PRD · BRD · FRD · TRD
 
-## Daftar Domain
+### _Blueprint aplikasi bisnis siap pakai — tinggal ganti `{{variable}}`, langsung prototipe._
 
-### 💰 Accounting & Finance
-| Folder | Deskripsi |
-|--------|-----------|
-| [accounting/](./accounting/) | Aplikasi akuntansi double-entry — chart of accounts, jurnal, buku besar, laporan keuangan |
-| [erp/](./erp/) | Enterprise Resource Planning — finance, inventory, HR, operasional |
-| [personal-finance-tracker/](./personal-finance-tracker/) | Pencatatan keuangan pribadi — budgeting, income, expenses |
-| [point-of-sales/](./point-of-sales/) | Point of Sales untuk toko retail — kasir, diskon, receipt, stok |
-| [procurement/](./procurement/) | Procurement — purchase orders, approvals, supplier tracking |
+<br/>
 
-### 🤖 AI & Communication
-| Folder | Deskripsi |
-|--------|-----------|
-| [ai-chat-bot/](./ai-chat-bot/) | AI Chatbot dengan knowledge base dan custom knowledge |
-| [customer-support-helpdesk/](./customer-support-helpdesk/) | Customer Support & Helpdesk — tiket, prioritas, workflow agent |
-| [chat-ai-generator/](./chat-ai-generator/) | Chat AI Prompt Generator — template, kategori, riwayat prompt |
-
-### 📊 Business & CRM
-| Folder | Deskripsi |
-|--------|-----------|
-| [crm/](./crm/) | CRM — kontak, deals, pipeline penjualan, aktivitas |
-| [business-intelligence/](./business-intelligence/) | Business Intelligence — dashboard, visualisasi, laporan interaktif |
-| [e-commerce/](./e-commerce/) | E-Commerce — produk, keranjang, checkout, pesanan |
-| [social-media-analytics/](./social-media-analytics/) | Social Media Analytics — follower growth, engagement, reach |
-
-### 👥 HR & Education
-| Folder | Deskripsi |
-|--------|-----------|
-| [hrm/](./hrm/) | Human Resource Management — rekrutmen, payroll, onboarding |
-| [cv-extractor/](./cv-extractor/) | CV Extractor — parsing CV ke structured data |
-| [learning-management-system/](./learning-management-system/) | Learning Management System — kursus, progress, sertifikasi |
-| [notes-app/](./notes-app/) | Notes App — catatan markdown, organisasi folder, tag |
-
-### 🏥 Healthcare & Compliance
-| Folder | Deskripsi |
-|--------|-----------|
-| [healthcare-emr/](./healthcare-emr/) | Healthcare EMR — catatan pasien, diagnosis, resep |
-| [grc/](./grc/) | GRC — Governance, Risk, Compliance tracking |
-
-### 📦 Operations & Supply Chain
-| Folder | Deskripsi |
-|--------|-----------|
-| [supply-chain-management/](./supply-chain-management/) | Supply Chain Management — inventory, pengiriman, tracking |
-| [enterprise-asset-management/](./enterprise-asset-management/) | Enterprise Asset Management — tracking aset fisik |
-| [vehicle-fleet-management/](./vehicle-fleet-management/) | Vehicle Fleet Management — armada, fuel, maintenance |
-| [document-management-system/](./document-management-system/) | Document Management System — filing, search, versioning |
-| [real-estate-management/](./real-estate-management/) | Real Estate Management — properti, penyewa, kontrak sewa |
-| [project-management-collab/](./project-management-collab/) | Project Management & Collab — tasks, deadlines, tim |
-| [content-management-system/](./content-management-system/) | Content Management System — blog, pages, publishing |
-
----
-
-## Cara Menggunakan
-
-### 1. Pilih folder domain yang sesuai
-
-Copy folder domain ke project kamu:
-```bash
-cp -r accounting/ project-anda/
+```text
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║    25 DOMAIN   100+ FILE   BAHASA INDONESIA   {{VARIABLE}}   ║
+║                                                              ║
+║    Setiap domain: prd.md · brd.md · frd.md · trd.md          ║
+║    Stack: Vite + React + TypeScript + Tailwind CSS           ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-### 2. Ganti semua `{{VARIABLES}}`
+<br/>
 
-Lihat daftar lengkap variabel di [_TEMPLATE/VARIABLE_REGISTRY.md](./_TEMPLATE/VARIABLE_REGISTRY.md).
+---
 
-**Quick replace dengan PowerShell:**
-```powershell
+## 🚀 Mulai Dalam 30 Detik
+
+```bash
+# 1. Salin folder domain yang kamu butuh
+cp -r e-commerce/ project-kamu/
+
+# 2. Ganti variabel (PowerShell)
 Get-ChildItem -Recurse -Filter *.md | ForEach-Object {
   (Get-Content $_.FullName -Raw) `
-    -replace '\{\{PROJECT_NAME\}\}','NamaProjectAnda' `
-    -replace '\{\{PROJECT_SLUG\}\}','nama-project' |
-  Set-Content $_.FullName -Encoding utf8
+    -replace '\{\{PROJECT_NAME\}\}','TokoImpian' `
+    -replace '\{\{PROJECT_SLUG\}\}','toko-impian'
+  | Set-Content $_.FullName -Encoding utf8
 }
+
+# 3. Selesai! Mulai prototipe 🎉
 ```
 
-### 3. Setiap folder berisi 4 file
-
-| File | Isi |
-|------|-----|
-| `prd.md` | Product Requirements Document — deskripsi produk, fitur, data structure, UI spec |
-| `brd.md` | Business Requirements Document — tujuan bisnis, target pasar, KPI |
-| `frd.md` | Functional Requirements Document — requirement detail, use case, aturan bisnis |
-| `trd.md` | Technical Requirements Document — tech stack, arsitektur, deployment |
-
-### 4. Stack default
-
-Semua template menggunakan **Vite + React + TypeScript + Tailwind CSS** dengan mock data (no backend).
+> 🔍 **Cari variabel lain?** Lihat panduan lengkap di [`_TEMPLATE/VARIABLE_REGISTRY.md`](_TEMPLATE/VARIABLE_REGISTRY.md)
 
 ---
 
-## Template Referensi
+## 📦 Semua Domain
 
-- [_TEMPLATE/](./_TEMPLATE/) — Template kosong untuk semua dokumen
-- [_TEMPLATE/VARIABLE_REGISTRY.md](./_TEMPLATE/VARIABLE_REGISTRY.md) — Daftar semua variabel
-- [landing page/](./landing%20page/) — Landing page design briefs
+<br/>
+
+### 💰 Accounting & Finance
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`accounting/`](accounting/) | Akuntansi double-entry — chart of accounts, jurnal, buku besar, laporan keuangan | 🅿 🅱 🅵 🆃 |
+| [`erp/`](erp/) | ERP all-in-one — finance, inventory, HR, operasional | 🅿 🅱 🅵 🆃 |
+| [`personal-finance-tracker/`](personal-finance-tracker/) | Keuangan pribadi — budgeting, income, expenses, savings | 🅿 🅱 🅵 🆃 |
+| [`point-of-sales/`](point-of-sales/) | POS toko retail — kasir, diskon, receipt, stok | 🅿 🅱 🅵 🆃 |
+| [`procurement/`](procurement/) | Pengadaan barang — PO, approvals, supplier tracking | 🅿 🅱 🅵 🆃 |
+
+### 🤖 AI & Communication
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`ai-chat-bot/`](ai-chat-bot/) | AI Chatbot dengan knowledge base & custom knowledge | 🅿 🅱 🅵 🆃 |
+| [`customer-support-helpdesk/`](customer-support-helpdesk/) | Helpdesk & tiket — prioritas, workflow agent | 🅿 🅱 🅵 🆃 |
+| [`chat-ai-generator/`](chat-ai-generator/) | Prompt generator AI — template, kategori, riwayat | 🅿 🅱 🅵 🆃 |
+
+### 📊 Business & CRM
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`crm/`](crm/) | CRM — kontak, deals, pipeline penjualan, aktivitas | 🅿 🅱 🅵 🆃 |
+| [`business-intelligence/`](business-intelligence/) | BI Dashboard — visualisasi data, laporan interaktif | 🅿 🅱 🅵 🆃 |
+| [`e-commerce/`](e-commerce/) | Toko online — produk, keranjang, checkout, pesanan | 🅿 🅱 🅵 🆃 |
+| [`social-media-analytics/`](social-media-analytics/) | Analitik medsos — follower growth, engagement, reach | 🅿 🅱 🅵 🆃 |
+
+### 👥 HR & Education
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`hrm/`](hrm/) | HRM — rekrutmen, payroll, onboarding, offboarding | 🅿 🅱 🅵 🆃 |
+| [`cv-extractor/`](cv-extractor/) | Ekstraksi CV ke structured data otomatis | 🅿 🅱 🅵 🆃 |
+| [`learning-management-system/`](learning-management-system/) | LMS — kursus, progress, sertifikasi | 🅿 🅱 🅵 🆃 |
+| [`notes-app/`](notes-app/) | Catatan markdown — organisasi folder, tag, search | 🅿 🅱 🅵 🆃 |
+
+### 🏥 Healthcare & Compliance
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`healthcare-emr/`](healthcare-emr/) | Rekam medis — pasien, diagnosis, resep, jadwal | 🅿 🅱 🅵 🆃 |
+| [`grc/`](grc/) | Governance, Risk & Compliance tracking | 🅿 🅱 🅵 🆃 |
+
+### 📦 Operations & Supply Chain
+
+| Folder | Tentang | File |
+|--------|---------|:----:|
+| [`supply-chain-management/`](supply-chain-management/) | SCM — inventory, pengiriman, tracking status | 🅿 🅱 🅵 🆃 |
+| [`enterprise-asset-management/`](enterprise-asset-management/) | Manajemen aset fisik perusahaan | 🅿 🅱 🅵 🆃 |
+| [`vehicle-fleet-management/`](vehicle-fleet-management/) | Armada kendaraan — fuel, maintenance, driver | 🅿 🅱 🅵 🆃 |
+| [`document-management-system/`](document-management-system/) | Dokumen digital — filing, search, versioning | 🅿 🅱 🅵 🆃 |
+| [`real-estate-management/`](real-estate-management/) | Properti — penyewa, kontrak sewa, maintenance | 🅿 🅱 🅵 🆃 |
+| [`project-management-collab/`](project-management-collab/) | Manajemen proyek — tasks, deadlines, kolaborasi tim | 🅿 🅱 🅵 🆃 |
+| [`content-management-system/`](content-management-system/) | CMS — blog, pages, publishing tanpa coding | 🅿 🅱 🅵 🆃 |
+
+> 🅿 = `prd.md` · 🅱 = `brd.md` · 🅵 = `frd.md` · 🆃 = `trd.md`
 
 ---
 
-## Lisensi
+## 🧩 Yang Ada di Setiap Folder
 
-Template ini bebas digunakan dan dimodifikasi untuk project apapun.
+```
+📂 domain-kamu/
+├── 📄 prd.md   →  Product Requirements Document
+│                   Layout, data structure (TypeScript),
+│                   UI components, mock data, success criteria
+│
+├── 📄 brd.md   →  Business Requirements Document
+│                   Tujuan bisnis, target pasar, KPI,
+│                   analisis kompetitor, rencana implementasi
+│
+├── 📄 frd.md   →  Functional Requirements Document
+│                   Modul & fitur (tabel prioritas P0/P1/P2),
+│                   use case, aturan bisnis, data flow
+│
+└── 📄 trd.md   →  Technical Requirements Document
+                    Tech stack, component architecture,
+                    CSS tokens, deployment, testing
+```
+
+---
+
+## ✨ Kenapa Pake Template Ini?
+
+| | |
+|---|---|
+| ✅ **25 domain** | Dari akuntansi sampai fleet management — semua sektor ter-cover |
+| ✅ **Bahasa Indonesia** | Konten & mock data pake nama/value lokal (Budi, Sari, PT Maju Jaya, Rp) |
+| ✅ **{{Variable}}** | Tinggal search-and-replace, langsung jadi |
+| ✅ **TypeScript** | Data structure pake interface — siap implementasi |
+| ✅ **Mock data** | Contoh konkret, tinggal pakai untuk prototipe |
+| ✅ **100% frontend** | Vite + React + Tailwind — no backend required |
+
+---
+
+## 🛠️ Cara Pakai
+
+| Langkah | Perintah |
+|---------|----------|
+| **Clone repo** | `git clone https://github.com/ai-builders-id/mdown-collection.git` |
+| **Pilih domain** | `cp -r accounting/ proyek-baru/` |
+| **Ganti variabel** | Search `{{` di VS Code → Replace All |
+| **Build prototipe** | `npm create vite@latest` + paste template |
+
+---
+
+## 📖 Juga Tersedia
+
+| Link | Untuk |
+|------|-------|
+| [`_TEMPLATE/`](_TEMPLATE/) | Template kosong — bikin domain kustom |
+| [`_TEMPLATE/VARIABLE_REGISTRY.md`](_TEMPLATE/VARIABLE_REGISTRY.md) | Daftar semua variable + mapping warna |
+| [`landing page/`](landing%20page/) | 12 design brief landing page siap build |
+
+---
+
+<br/>
+
+<div align="center">
+
+**Dibuat dengan ❤️ oleh [AI Builders ID](https://github.com/ai-builders-id)** · _Bangun produk impian, tanpa mulai dari nol._
+
+</div>
