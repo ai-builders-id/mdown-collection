@@ -16,7 +16,9 @@
 ║                                                              ║
 ║    25 DOMAIN   100+ FILE   BAHASA INDONESIA   {{VARIABLE}}   ║
 ║                                                              ║
-║    Setiap domain: prd.md · brd.md · frd.md · trd.md          ║
+║    Format: PRD - Domain.md · BRD - Domain.md                 ║
+║            FRD - Domain.md · TRD - Domain.md                 ║
+║                                                              ║
 ║    Stack: Vite + React + TypeScript + Tailwind CSS           ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -106,7 +108,7 @@ Get-ChildItem -Recurse -Filter *.md | ForEach-Object {
 | [`project-management-collab/`](project-management-collab/) | Manajemen proyek — tasks, deadlines, kolaborasi tim | 🅿 🅱 🅵 🆃 |
 | [`content-management-system/`](content-management-system/) | CMS — blog, pages, publishing tanpa coding | 🅿 🅱 🅵 🆃 |
 
-> 🅿 = `prd.md` · 🅱 = `brd.md` · 🅵 = `frd.md` · 🆃 = `trd.md`
+> 🅿 = `PRD - Domain.md` · 🅱 = `BRD - Domain.md` · 🅵 = `FRD - Domain.md` · 🆃 = `TRD - Domain.md`
 
 ---
 
@@ -114,21 +116,21 @@ Get-ChildItem -Recurse -Filter *.md | ForEach-Object {
 
 ```
 📂 domain-kamu/
-├── 📄 prd.md   →  Product Requirements Document
-│                   Layout, data structure (TypeScript),
-│                   UI components, mock data, success criteria
+├── 📄 PRD - Domain.md  →  Product Requirements Document
+│                           Layout, data structure (TypeScript),
+│                           UI components, mock data, success criteria
 │
-├── 📄 brd.md   →  Business Requirements Document
-│                   Tujuan bisnis, target pasar, KPI,
-│                   analisis kompetitor, rencana implementasi
+├── 📄 BRD - Domain.md  →  Business Requirements Document
+│                           Tujuan bisnis, target pasar, KPI,
+│                           analisis kompetitor, rencana implementasi
 │
-├── 📄 frd.md   →  Functional Requirements Document
-│                   Modul & fitur (tabel prioritas P0/P1/P2),
-│                   use case, aturan bisnis, data flow
+├── 📄 FRD - Domain.md  →  Functional Requirements Document
+│                           Modul & fitur (tabel prioritas P0/P1/P2),
+│                           use case, aturan bisnis, data flow
 │
-└── 📄 trd.md   →  Technical Requirements Document
-                    Tech stack, component architecture,
-                    CSS tokens, deployment, testing
+└── 📄 TRD - Domain.md  →  Technical Requirements Document
+                            Tech stack, component architecture,
+                            CSS tokens, deployment, testing
 ```
 
 ---
